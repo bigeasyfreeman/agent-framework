@@ -1,0 +1,23 @@
+eval:
+  name: coordinator-spec-freeze-gate
+  description: Verify coordinator enforces spec freeze before planning.
+  agent: coordinator
+
+  trigger:
+    input: |
+      # Feature Specification: Example
+      ## Open Questions
+      - [ ] What is the timeout?
+      ---
+      Ready for Implementation: No
+
+      Please produce an execution plan.
+
+  assertions:
+    contains:
+      - "Spec Freeze"
+      - "Phase 0"
+    not_contains:
+      - "Execution Plan:"
+      - "Phase 3: BUILD"
+

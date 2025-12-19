@@ -1,0 +1,16 @@
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Local secrets
+.env
+.env.*
+
+# Generated exports
+export/
+
+# Archives
+*.zip

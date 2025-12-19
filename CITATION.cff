@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+title: "Agent Framework (Model-Agnostic)"
+message: "If you use this framework, please cite it."
+type: software
+authors:
+  - family-names: Freeman
+    given-names: Eric
+license: Apache-2.0
