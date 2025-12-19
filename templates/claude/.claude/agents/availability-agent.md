@@ -377,8 +377,8 @@ smoke_tests:
 ### Error Boundary Coverage
 | Route | Has error.tsx | Has loading.tsx | Data Fetching |
 |-------|--------------|-----------------|---------------|
-| /compass | Yes | Yes | Yes |
-| /compass/assets | No | No | Yes |
+| /dashboard | Yes | Yes | Yes |
+| /dashboard/assets | No | No | Yes |
 
 ### API Resilience Issues
 | File | Line | Issue | Severity |

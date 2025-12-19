@@ -79,18 +79,19 @@ Repo-root `.claude/history/` (if present) and `~/.claude/history/` (global) use 
 
 **Components:**
 - **Timestamp:** `YYYY-MM-DD-HHMMSS` (local timezone)
-- **Project:** Project identifier (e.g., `compass`, `personal`, `client-x`)
+- **Project:** Project identifier (e.g., `example-app`, `personal`, `client-x`)
 - **Type:** Capture type (SESSION, LEARNING, RESEARCH, DECISION, FEATURE, BUG)
 - **Description:** kebab-case, max 50 chars
 
 **Examples:**
 ```
-2024-01-15-143022_compass_SESSION_auth-flow-implementation.md
-2024-01-15-160500_compass_LEARNING_redis-connection-pooling.md
+2024-01-15-143022_example-app_SESSION_auth-flow-implementation.md
+2024-01-15-160500_example-app_LEARNING_redis-connection-pooling.md
 2024-01-15-093000_personal_RESEARCH_kubernetes-security.md
-2024-01-15-110000_compass_DECISION_jwt-vs-sessions.md
-2024-01-15-170000_compass_FEATURE_workspace-creation.md
-2024-01-15-140000_compass_BUG_token-expiry-validation.md
+2024-01-15-110000_example-app_DECISION_jwt-vs-sessions.md
+2024-01-15-170000_example-app_FEATURE_workspace-creation.md
+2024-01-15-140000_example-app_BUG_token-expiry-validation.md
+
 ```
 
 ---
@@ -291,8 +292,8 @@ capture bug [description]        # Capture bug fix
 # Find all auth-related learnings
 history search "authentication" --type LEARNING
 
-# Recent decisions for compass
-history project compass --type DECISION --recent 10
+# Recent decisions for a project
+history project example-app --type DECISION --recent 10
 
 # All learnings tagged with redis
 history tags redis --type LEARNING
@@ -329,8 +330,8 @@ on_memory_agent_capture:
 history-agent writes events to `raw-outputs/` that metrics-agent analyzes:
 
 ```jsonl
-{"timestamp":"2024-01-15T14:30:00Z","type":"capture","capture_type":"LEARNING","project":"compass","description":"redis-pooling"}
-{"timestamp":"2024-01-15T15:00:00Z","type":"capture","capture_type":"SESSION","project":"compass","description":"auth-flow"}
+{"timestamp":"2024-01-15T14:30:00Z","type":"capture","capture_type":"LEARNING","project":"example-app","description":"redis-pooling"}
+{"timestamp":"2024-01-15T15:00:00Z","type":"capture","capture_type":"SESSION","project":"example-app","description":"auth-flow"}
 ```
 
 ---

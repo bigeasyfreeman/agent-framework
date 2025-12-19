@@ -21,6 +21,6 @@ Applies when `TECHSTACK.md` includes `nextjs` in `overlays`.
 - Silent catch blocks that hide user-visible failures.
 
 ## Verification
-- Run `pnpm --filter @compass/web test` for changed UI logic.
-- Run `pnpm --filter @compass/web lint` for Next.js lint rules.
+- Run your repo's UI tests for changed UI logic (examples: `pnpm test`, `pnpm -C apps/web test`).
+- Run your repo's lint rules (examples: `pnpm lint`, `pnpm -C apps/web lint`).
 

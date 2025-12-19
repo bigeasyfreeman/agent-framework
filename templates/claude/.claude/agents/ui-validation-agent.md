@@ -192,7 +192,7 @@ Phase 5: CLEANUP   → owning agent applies fixes; cleanup-agent polishes
 
 **What to Flag:**
 - Child `layout.tsx` files that import and wrap with the same shell component as a parent layout
-- Multiple `layout.tsx` files in the same route tree both rendering `<CompassShell>`, `<AppShell>`, `<DashboardLayout>`, or similar shell components
+- Multiple `layout.tsx` files in the same route tree both rendering `<AppShell>`, `<DashboardLayout>`, or similar shell components
 - Nested layouts that both contain navigation, sidebars, or global UI elements
 
 **Detection Patterns:**
@@ -201,7 +201,7 @@ Phase 5: CLEANUP   → owning agent applies fixes; cleanup-agent polishes
 find apps/web/src/app -name "layout.tsx" -type f
 
 # Check each layout for shell component imports
-grep -l "CompassShell\|AppShell\|DashboardLayout\|MainLayout" $(find apps/web/src/app -name "layout.tsx")
+grep -l "AppShell\|DashboardLayout\|MainLayout" $(find apps/web/src/app -name "layout.tsx")
 
 # If a parent already has the shell, children should NOT have layout.tsx with shell
 ```
@@ -220,7 +220,7 @@ layout_duplication:
     if_parent_has_shell: "Child should NOT have layout.tsx with same shell"
     severity: error
 
-  - pattern: "CompassShell|AppShell|DashboardLayout"
+  - pattern: "AppShell|DashboardLayout"
     context: "Only ONE layout in route tree should render shell"
     severity: error
 ```
@@ -229,15 +229,15 @@ layout_duplication:
 
 **Example - WRONG (causes duplication):**
 ```
-/app/compass/layout.tsx        <- wraps in <CompassShell>
-/app/compass/assets/layout.tsx <- ALSO wraps in <CompassShell> (WRONG!)
-/app/compass/assets/page.tsx
+/app/dashboard/layout.tsx        <- wraps in <AppShell>
+/app/dashboard/assets/layout.tsx <- ALSO wraps in <AppShell> (WRONG!)
+/app/dashboard/assets/page.tsx
 ```
 
 **Example - CORRECT:**
 ```
-/app/compass/layout.tsx        <- wraps in <CompassShell>
-/app/compass/assets/page.tsx   <- automatically inherits CompassShell (no layout.tsx needed)
+/app/dashboard/layout.tsx        <- wraps in <AppShell>
+/app/dashboard/assets/page.tsx   <- automatically inherits AppShell (no layout.tsx needed)
 ```
 
 ---
@@ -297,7 +297,7 @@ static_checks:
       check: "If parent directory has layout.tsx with shell component, this should NOT also wrap in shell"
       severity: error
 
-    - pattern: "CompassShell|AppShell|DashboardLayout|MainLayout"
+    - pattern: "AppShell|DashboardLayout|MainLayout"
       file: "**/layout.tsx"
       check: "Only ONE layout in route tree should render this shell"
       severity: error
@@ -407,7 +407,7 @@ Before approving frontend work, verify:
 - [ ] **Responsive:** Layout works at mobile (320px), tablet (768px), desktop (1024px+)
 - [ ] **Theme:** Works in light and dark mode (if applicable)
 - [ ] **Accessibility:** Focus indicators visible, semantic HTML used
-- [ ] **Layout Nesting:** No duplicate shell components (CompassShell, AppShell) in nested layouts
+- [ ] **Layout Nesting:** No duplicate shell components (AppShell, etc.) in nested layouts
 
 ---
 
@@ -428,4 +428,4 @@ Before approving frontend work, verify:
 | Grid cell without overflow handling | Add `overflow-hidden` to cell, `truncate` to text |
 | Long labels on mobile | Use conditional short/full labels with responsive classes |
 | Nested layout with same shell | Delete child `layout.tsx` or remove shell wrapper |
-| `<CompassShell>` in child layout | Only parent should wrap in shell; child inherits |
+| `<AppShell>` in child layout | Only parent should wrap in shell; child inherits |

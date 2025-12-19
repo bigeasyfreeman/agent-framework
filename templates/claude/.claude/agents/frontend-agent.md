@@ -47,7 +47,7 @@ Before implementing, verify:
 - About to add inline styles instead of using design system tokens
 - Pattern differs from adjacent components in same directory
 - **About to create a `layout.tsx` file** - CHECK PARENT FIRST! (see Layout Files section below)
-- About to import a shell component (CompassShell, AppShell, etc.) in a nested route
+- About to import a shell component (AppShell, DashboardShell, etc.) in a nested route
 
 ## Standard Build Handoff Note (REQUIRED)
 When you finish frontend implementation work (or become blocked), end your response with a `handoff_note` YAML block (Schema v1; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
@@ -79,13 +79,13 @@ In Next.js App Router, layouts are **automatically nested and compound**. A chil
 
 ```
 /app/layout.tsx              <- Root layout (wraps everything)
-  /app/compass/layout.tsx    <- Wraps ALL /compass/* routes in CompassShell
-    /app/compass/assets/     <- Automatically inherits CompassShell
-    /app/compass/findings/   <- Automatically inherits CompassShell
+  /app/dashboard/layout.tsx  <- Wraps ALL /dashboard/* routes in AppShell
+    /app/dashboard/assets/   <- Automatically inherits AppShell
+    /app/dashboard/findings/ <- Automatically inherits AppShell
 ```
 
 **The Duplication Bug:**
-If you create `/app/compass/assets/layout.tsx` and it ALSO wraps in `<CompassShell>`, you get **nested shells** - double sidebars, double headers, double chat panels.
+If you create `/app/dashboard/assets/layout.tsx` and it ALSO wraps in `<AppShell>`, you get **nested shells** - double sidebars, double headers, double chat panels.
 
 **Before Creating ANY layout.tsx:**
 
@@ -103,9 +103,9 @@ If you create `/app/compass/assets/layout.tsx` and it ALSO wraps in `<CompassShe
 
 **Layout Decision Tree:**
 ```
-Want to add layout to /app/compass/foo/?
+Want to add layout to /app/dashboard/foo/?
   │
-  ├─ Does /app/compass/layout.tsx exist with shell?
+  ├─ Does /app/dashboard/layout.tsx exist with shell?
   │     │
   │     ├─ YES → Do NOT create layout.tsx with shell
   │     │        (child pages automatically inherit parent layout)
@@ -120,22 +120,22 @@ Want to add layout to /app/compass/foo/?
 
 **Example - WRONG (causes duplication):**
 ```typescript
-// /app/compass/assets/layout.tsx - WRONG!
-import { CompassShell } from "@/components/layout/CompassShell";
+// /app/dashboard/assets/layout.tsx - WRONG!
+import { AppShell } from "@/components/layout/AppShell";
 export default function AssetsLayout({ children }) {
-  return <CompassShell>{children}</CompassShell>;  // DUPLICATE!
+  return <AppShell>{children}</AppShell>;  // DUPLICATE!
 }
 ```
 
 **Example - CORRECT (no layout needed):**
 ```
-/app/compass/layout.tsx      <- Has CompassShell
-/app/compass/assets/page.tsx <- Just the page, inherits shell automatically
+/app/dashboard/layout.tsx      <- Has AppShell
+/app/dashboard/assets/page.tsx <- Just the page, inherits shell automatically
 ```
 
 **Example - CORRECT (layout without shell):**
 ```typescript
-// /app/compass/assets/layout.tsx - OK if needed
+// /app/dashboard/assets/layout.tsx - OK if needed
 export default function AssetsLayout({ children }) {
   return (
     <div className="p-4">
