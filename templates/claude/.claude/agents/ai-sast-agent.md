@@ -28,11 +28,11 @@ Find *exploitable* vulnerabilities with clear evidence and reachability, then pr
 
 ## 📄 Required Gate Report Output (`gate_report` YAML)
 
-End your response with a fenced `yaml` block containing `gate_report` (Schema v1 from `CLAUDE.md`).
+End your response with a fenced `yaml` block containing `gate_report` (Schema v2 from `CLAUDE.md`).
 
 ```yaml
 gate_report:
-  version: 1
+  version: 2
   gate: ai-sast-agent
   status: pass # pass|fail|warn|skip
   summary: "1-2 sentence outcome summary"
@@ -90,4 +90,3 @@ Perform these passes (you can do them in parallel mentally, but report consolida
 - `warn`: medium findings, or unclear reachability where additional evidence is needed
 - `pass`: no critical/high findings; only low/info issues (or none)
 - `skip`: no applicable code/config/infra changes in scope (must explain)
-

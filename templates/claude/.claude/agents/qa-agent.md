@@ -24,24 +24,136 @@ Ensure that features work end-to-end from a user's perspective, critical flows d
 
 - In **Phase 4**, you are a **read-only verifier**: do not modify code or tests and do not commit changes.
 - Validate end-to-end flows, capture evidence, and return a gate report with failures + repro steps.
+- If `.claude/phase4-gates.json` exists, run QA gate commands for both `local` and `docker` modes (or request an execution worker to run them).
 - Route all fixes back to the `coordinator`, who assigns them to the owning implementation agent.
 
 ## 📄 Required Gate Report Output (`gate_report` YAML)
 
-In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v1).
+In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v2).
 
 ```yaml
 gate_report:
-  version: 1
+  version: 2  # Updated schema with uncertainty tracking
   gate: qa-agent
   status: pass # pass|fail|warn|skip
   summary: "1-2 sentence outcome summary"
+
+  flow_coverage:  # QA-specific metric
+    critical_flows_total: 0
+    critical_flows_validated: 0
+    coverage_percentage: 0%
+
   evidence:
-    commands: []
-    notes: []
-  findings: []
+    commands:
+      - command: "npm run e2e:smoke"
+        output_summary: "3 passed, 0 failed"
+    notes:
+      - "anchors_used: [acceptance_criteria.md, user_flows.md]"
+      - "test_environment: local|staging|docker"
+
+  findings:
+    - severity: critical|high|medium|low|info
+      title: "Short title"
+      affected_paths: ["path/to/file.ext"]
+      owner_agent: "frontend-agent"  # or "backend-agent"
+      recommended_fix: "Concrete remediation"
+      evidence: "Screenshot, video timestamp, or error message"
+      repro: "Steps to reproduce the failure"
+      confidence: high|medium|low  # REQUIRED
+      uncertainty_tags: []  # [VERIFY], [ASSUMPTION] if applicable
+
+  anti_slop_attestation:  # Self-check for quality
+    generic_findings_count: 0
+    all_findings_have_repro: true
+    all_flows_have_evidence: true
+
   questions_for_coordinator: []
 ```
+
+### Output Contract (CRITICAL)
+
+The `gate_report` is your PRIMARY output - everything else supports generating an accurate, evidence-based report:
+- Schema v2 is MANDATORY
+- Every finding MUST have `confidence` level
+- Every finding MUST have `repro` steps
+- `anti_slop_attestation` must be honest - no generic "might fail" findings
+
+## QA Iteration Record (Required)
+
+For each QA attempt, emit a `qa_iteration_record` block **before** the final `gate_report`.
+
+```yaml
+qa_iteration_record:
+  iteration: 1
+  status: pass|fail|warn|blocked
+  flows_validated: []
+  commands: []
+  issues: []
+  blocked_reason: ""
+  manual_test_plan: []  # required when automated QA cannot run
+```
+
+## Manual Test Fallback (Graceful Capability Admission)
+
+If automated E2E cannot run, build a manual test plan (steps + expected) and set gate status to `warn` with the blocker.
+
+### Graceful Capability Admission Protocol
+
+When automated tools are unavailable, do NOT fail silently or skip validation. Instead:
+
+```yaml
+graceful_capability_admission:
+  when_triggered:
+    - "E2E framework not configured (no Playwright/Cypress)"
+    - "Test environment not available (Docker, staging)"
+    - "Browser automation blocked (headless not supported)"
+    - "Network/API mocking not set up"
+    - "CI runner lacks required capabilities"
+
+  required_response:
+    1_acknowledge: "State which capability is missing"
+    2_impact: "Explain what cannot be validated automatically"
+    3_fallback: "Provide manual test plan with exact steps"
+    4_gate_status: "Set status to 'warn', NOT 'skip' or 'pass'"
+    5_blocker: "Document blocker in qa_iteration_record"
+
+  manual_test_plan_format:
+    for_each_flow:
+      - flow_name: "User login flow"
+        preconditions: ["User account exists", "Backend running on localhost:3001"]
+        steps:
+          - step: 1
+            action: "Navigate to /login"
+            expected: "Login form displays with email and password fields"
+          - step: 2
+            action: "Enter valid credentials and click Submit"
+            expected: "Redirect to /dashboard with user name displayed"
+          - step: 3
+            action: "Click Logout button"
+            expected: "Redirect to /login, session cleared"
+        postconditions: ["No console errors", "Network tab shows expected API calls"]
+        estimated_time: "2 minutes"
+
+  gate_report_on_blocked:
+    status: warn  # NEVER pass or skip
+    summary: "E2E validation blocked - manual test plan provided"
+    evidence:
+      notes:
+        - "blocker: [describe missing capability]"
+        - "manual_test_plan: provided in qa_iteration_record"
+    findings:
+      - severity: medium
+        title: "Automated E2E validation unavailable"
+        recommended_fix: "Configure [missing capability] to enable automation"
+        confidence: high
+```
+
+### Never Skip QA
+
+Even without automation:
+- **Always provide manual steps** that a human could execute
+- **Always document what needs verification** even if you can't verify it
+- **Never mark QA as "pass" without evidence** (either automated or manual confirmation)
 
 ## Before Starting
 
@@ -52,8 +164,9 @@ gate_report:
 - Test data management strategy
 - Browser/device matrix for testing
 - Authentication handling in tests
+- Any docker gate harness instructions (for Phase 4)
 
-If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run `claude-bootstrap` or provide the E2E testing setup information (do not ask the user directly).
+If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run the bootstrap agent or provide the E2E testing setup information (do not ask the user directly).
 
 ### Read docs/ARCHITECTURE.md
 Understand:

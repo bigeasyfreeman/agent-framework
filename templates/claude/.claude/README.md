@@ -91,6 +91,33 @@ See `agents/TECHSTACK.md.template` for the full block.
    - optional `.claude/evals/` scaffolding
 3. Commit `.claude/` + `TECHSTACK.md` so the whole workflow is reproducible for the team.
 
+## Skills
+
+The `skills/` directory contains execution engines and specialized capabilities:
+
+| Skill | Purpose |
+|-------|---------|
+| `THEALGORITHM/` | Universal 7-phase execution engine (OBSERVE→THINK→PLAN→BUILD→EXECUTE→VERIFY→LEARN) |
+| `_CREATE_PLAN/` | Interactive implementation planning with research |
+| `_DEBUG/` | Systematic debugging protocol |
+| `Agents/` | Dynamic agent composition from traits |
+
+### THE ALGORITHM
+
+Invoke with: "run the algorithm" or "algorithm effort [LEVEL]: [task]"
+
+Effort levels: TRIVIAL → QUICK → STANDARD → THOROUGH → DETERMINED
+
+Each level unlocks more agents and parallel capacity.
+
+## Workflows
+
+The `workflows/` directory contains orchestration patterns:
+
+| Workflow | Purpose |
+|----------|---------|
+| `Delegation.md` | Parallel agent execution patterns, model selection, spotcheck |
+
 ## Customizing per repo
 
 - Prefer repo-local overrides under `.claude/agents/` for any project-specific behavior.

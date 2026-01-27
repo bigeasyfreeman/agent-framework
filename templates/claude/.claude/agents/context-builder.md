@@ -30,7 +30,7 @@ CONTEXT-BUILDER MANDATORY CHECKLIST (ALWAYS COMPLETE)
 
 ### Why This is Mandatory
 
-1. **One-shotting depends on context** - Future Claude sessions need accurate docs
+1. **One-shotting depends on context** - Future agent sessions need accurate docs
 2. **Human developers need docs** - Onboarding and maintenance require context
 3. **Prevents knowledge loss** - Changes not documented are forgotten
 4. **Quality gate** - Incomplete docs = incomplete work
@@ -91,7 +91,7 @@ Enable "one-shotting" - the ability for any agent or developer to understand and
 - If required context is missing (what changed, which directories were touched, what decisions were made), stop and request it from the `coordinator` before writing docs (do not ask the user directly).
 
 ## Standard Build Handoff Note (REQUIRED)
-When you finish documentation updates (or become blocked), end your response with a `handoff_note` YAML block (Schema v1; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
+When you finish documentation updates (or become blocked), end your response with a `handoff_note` YAML block (Schema v2; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
 
 ## Responsibilities
 

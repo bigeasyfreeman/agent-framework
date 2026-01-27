@@ -34,11 +34,11 @@ Prevent common UI bugs from shipping by detecting:
 
 ## 📄 Required Gate Report Output (`gate_report` YAML)
 
-In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v1).
+In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v2).
 
 ```yaml
 gate_report:
-  version: 1
+  version: 2
   gate: ui-validation-agent
   status: pass # pass|fail|warn|skip
   summary: "1-2 sentence outcome summary"
@@ -186,59 +186,20 @@ Phase 5: CLEANUP   → owning agent applies fixes; cleanup-agent polishes
 - Test both light and dark modes
 - Follow design system spacing scale
 
-### 8. Layout/Shell Duplication (Next.js App Router)
+### 8. Layout/Shell Duplication (Framework-Specific)
 
-**The Problem:** In Next.js App Router, layouts are nested and compound automatically. A child route's `layout.tsx` wrapping content in the same shell component as a parent layout causes "app within app" duplication - double sidebars, double headers, double chat panels.
+**The Problem:** Nested route layouts can duplicate shell/chrome components, creating "app within app" UI (double navs, duplicate headers, stacked sidebars).
 
 **What to Flag:**
-- Child `layout.tsx` files that import and wrap with the same shell component as a parent layout
-- Multiple `layout.tsx` files in the same route tree both rendering `<AppShell>`, `<DashboardLayout>`, or similar shell components
-- Nested layouts that both contain navigation, sidebars, or global UI elements
-
-**Detection Patterns:**
-```bash
-# Find all layout.tsx files in the app directory
-find apps/web/src/app -name "layout.tsx" -type f
-
-# Check each layout for shell component imports
-grep -l "AppShell\|DashboardLayout\|MainLayout" $(find apps/web/src/app -name "layout.tsx")
-
-# If a parent already has the shell, children should NOT have layout.tsx with shell
-```
+- Nested layout files that wrap with the same shell/chrome component as a parent layout.
+- Multiple layout layers in a route tree that each render global navigation or shell UI.
 
 **What to Recommend:**
-- **Rule:** Only the TOP-LEVEL layout within a shell boundary should wrap content in that shell
-- Child routes that need a layout should ONLY add route-specific wrappers (padding, titles, etc.)
-- If a child route needs different layout entirely, use route groups with separate layouts
-- Delete any nested `layout.tsx` that duplicates the parent's shell wrapping
+- Only the top-level layout within a shell boundary should render the shell.
+- Child layouts should add only route-specific wrappers (padding, titles, providers).
+- If a subtree needs a different shell, use framework-supported route grouping.
 
-**Static Analysis Check:**
-```yaml
-layout_duplication:
-  - scan: "apps/**/app/**/layout.tsx"
-    check: "Does parent layout already use this shell component?"
-    if_parent_has_shell: "Child should NOT have layout.tsx with same shell"
-    severity: error
-
-  - pattern: "AppShell|DashboardLayout"
-    context: "Only ONE layout in route tree should render shell"
-    severity: error
-```
-
-**Rule:** "Within any route tree, only ONE layout.tsx should wrap content in a shell/chrome component. Child routes inherit the parent's shell automatically."
-
-**Example - WRONG (causes duplication):**
-```
-/app/dashboard/layout.tsx        <- wraps in <AppShell>
-/app/dashboard/assets/layout.tsx <- ALSO wraps in <AppShell> (WRONG!)
-/app/dashboard/assets/page.tsx
-```
-
-**Example - CORRECT:**
-```
-/app/dashboard/layout.tsx        <- wraps in <AppShell>
-/app/dashboard/assets/page.tsx   <- automatically inherits AppShell (no layout.tsx needed)
-```
+**Rule:** "Within any route tree, only ONE layout should wrap content in the shell/chrome component."
 
 ---
 
@@ -292,14 +253,12 @@ static_checks:
       severity: info
 
   layout_duplication:
-    - pattern: "layout\\.tsx"
-      context: "Next.js App Router"
-      check: "If parent directory has layout.tsx with shell component, this should NOT also wrap in shell"
+    - pattern: "layout"
+      check: "If parent layout already renders shell/chrome, child must not duplicate it"
       severity: error
 
-    - pattern: "AppShell|DashboardLayout|MainLayout"
-      file: "**/layout.tsx"
-      check: "Only ONE layout in route tree should render this shell"
+    - pattern: "Shell|Layout|Dashboard"
+      check: "Only ONE layout in route tree should render the shell/chrome"
       severity: error
 ```
 
@@ -407,7 +366,7 @@ Before approving frontend work, verify:
 - [ ] **Responsive:** Layout works at mobile (320px), tablet (768px), desktop (1024px+)
 - [ ] **Theme:** Works in light and dark mode (if applicable)
 - [ ] **Accessibility:** Focus indicators visible, semantic HTML used
-- [ ] **Layout Nesting:** No duplicate shell components (AppShell, etc.) in nested layouts
+- [ ] **Layout Nesting:** No duplicate shell components in nested layouts
 
 ---
 
@@ -428,4 +387,4 @@ Before approving frontend work, verify:
 | Grid cell without overflow handling | Add `overflow-hidden` to cell, `truncate` to text |
 | Long labels on mobile | Use conditional short/full labels with responsive classes |
 | Nested layout with same shell | Delete child `layout.tsx` or remove shell wrapper |
-| `<AppShell>` in child layout | Only parent should wrap in shell; child inherits |
+| `<ShellComponent>` in child layout | Only parent should wrap in shell; child inherits |

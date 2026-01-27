@@ -22,6 +22,15 @@ Enable continuous improvement of the agent framework by analyzing history, detec
 
 ---
 
+## New Agent Guardrail (Mandatory)
+
+Before proposing or building any new agent:
+- Evaluate whether an existing agent can cover the need (state why not).
+- Recommend build vs do not build with rationale.
+- Do not create a new agent without explicit user approval.
+- Any new agent must include **Context Windows (Hard Rule)** and a `handoff_note` requirement for repo-changing work.
+- If changes affect shared rules, update `CLAUDE.md` and relevant agent docs in the same proposal.
+
 ## Improvement Domains
 
 ### 1. Agent Instructions
@@ -70,11 +79,16 @@ pattern_detection:
       - Identify high-velocity sessions
       - Find patterns in clean implementations
       - Extract what worked well
-    
-    output:
-      - Pattern report
-      - Improvement recommendations
-      - Proposed agent updates
+
+    consensus_gap_patterns:
+      - Find cases with high agreement but low anchor pass rate
+      - Find cases with low agreement but high anchor pass rate
+      - Recommend prompt or gate tuning based on gap direction
+
+  output:
+    - Pattern report
+    - Improvement recommendations
+    - Proposed agent updates
 ```
 
 ### Agent Effectiveness Analysis
@@ -153,6 +167,10 @@ triggered:
   after_10_gate_failures:
     - Analyze failure patterns
     - Propose targeted fixes
+
+  after_3_consensus_gaps:
+    - Analyze anchored consensus gaps
+    - Propose rubric or prompt adjustments
   
   after_sprint:
     - Sprint retrospective analysis

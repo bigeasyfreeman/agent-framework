@@ -98,6 +98,21 @@ security_quality:
   - false_positives: count
 ```
 
+### Anchored Consensus Metrics
+
+```yaml
+anchored_consensus:
+  - anchor_pass_rate: percentage
+  - consensus_rate: percentage
+  - consensus_gap: percentage # consensus_rate - anchor_pass_rate
+  - anchors_used: list
+  - alpha_by_phase:
+      phase_0_5: 1.0
+      phase_3_5: 0.7
+      phase_4: 0.8
+      phase_6: 0.6
+```
+
 ### Velocity Metrics
 
 ```yaml
@@ -138,6 +153,13 @@ events:
     - gate_agent
     - failure_type
     - failure_details
+  
+  consensus_gap_detected:
+    - feature_id
+    - phase
+    - anchor_pass_rate
+    - consensus_rate
+    - notes
     - retry_number
     
   gate_passed:

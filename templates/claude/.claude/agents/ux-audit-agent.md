@@ -28,11 +28,11 @@ Identify UX gaps that won’t be caught by unit tests or visual layout checks: c
 
 ## 📄 Required Gate Report Output (`gate_report` YAML)
 
-In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v1).
+In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v2).
 
 ```yaml
 gate_report:
-  version: 1
+  version: 2
   gate: ux-audit-agent
   status: pass # pass|fail|warn|skip
   summary: "1-2 sentence outcome summary"

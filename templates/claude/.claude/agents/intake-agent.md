@@ -41,6 +41,7 @@ request_type:
 - Extract objective, constraints, and success criteria if present.
 - Detect ambiguity, missing context, or conflicting goals.
 - Assign `request_type`, `clarity`, and `risk_level`.
+- **Identify multiple valid interpretations** if request is ambiguous.
 
 ### 2. Decide Pipeline Entry
 
@@ -62,7 +63,65 @@ risk_level:
 ```
 If `risk_level` is medium/high, flag mandatory threat modeling (security-agent) and stricter gates.
 
-### 4. Produce Intake Report
+### 4. Validation Recommendations (Tiered)
+Risk drives validation depth, not phase skipping. Always run all phases.
+
+```yaml
+validation_tier_map:
+  low: minimal
+  medium: standard
+  high: extended
+```
+
+Provide a recommendation that testing/QA gates can follow.
+
+### 5. Disambiguation (NEW)
+
+When a request has multiple valid interpretations with different outcomes:
+
+**Trigger conditions:**
+- 2+ valid interpretations exist
+- Risk levels differ significantly between interpretations
+- Scope differs significantly between interpretations
+
+**Protocol:**
+1. Identify the two interpretations with the biggest difference in outcome
+2. Surface both with risk and outcome
+3. Default to the safer option
+4. If BOTH are high-risk, ask one clarifying question instead
+
+**Format:**
+```
+Two interpretations detected:
+
+(A) [Description]
+- Risk: [low|medium|high]
+- Outcome: [What happens]
+
+(B) [Description]
+- Risk: [low|medium|high]
+- Outcome: [What happens]
+
+Default: (A) - [Why this is safer]
+```
+
+### 6. Action Classification
+
+Classify the action into one of three buckets for Phase -0.75 handling:
+
+| Bucket | When | Checkpoint |
+|--------|------|------------|
+| `let_it_run` | Read-only, reversible, drafts | Never |
+| `checkpoint` | Affects shared systems/people | Before execution |
+| `always_confirm` | Irreversible, high-impact | Mandatory |
+
+**Auto-bump rules:**
+- `affects_external_users` → checkpoint
+- `irreversible` → always_confirm
+- `sends_data_externally` → always_confirm
+- `modifies_production` → always_confirm
+
+### 7. Produce Intake Report
 **Output this exactly**:
 
 ```yaml
@@ -75,15 +134,52 @@ intake_report:
   proposed_skips: []   # phases you think can be skipped
   required_agents: []  # ordered list, starting with next owner
   open_questions: []   # if clarity == needs_clarification
+
+  # Action classification for Phase -0.75
+  action_classification: let_it_run|checkpoint|always_confirm
+  classification_reason: "<why this classification>"
+
+  # Disambiguation (if ambiguous)
+  disambiguation:
+    required: true|false
+    interpretations:
+      - id: A
+        description: "<interpretation>"
+        risk: low|medium|high
+        outcome: "<what happens>"
+      - id: B
+        description: "<interpretation>"
+        risk: low|medium|high
+        outcome: "<what happens>"
+    default_interpretation: A
+    reason: "<why A is safer>"
+
+  validation_recommendations:
+    tier: minimal|standard|extended
+    focus: []          # e.g., "tests", "security", "performance"
+    rationale: "<why this tier>"
   rationale: "<why this routing>"
 ```
 
-### 5. Skip Approval Protocol
+### 8. Skip Approval Protocol
 If proposing any skip, state:
 1. Which phases to skip
 2. Why
 3. Ask user: “yes, skip phase X” before proceeding
 
 ## Hand‑off Rules
-- If `clarity == needs_clarification` → hand to product-agent.
-- Otherwise → hand to coordinator with the Intake Report.
+- **ALWAYS** → hand to scope-analyzer-agent (Phase -0.5) with the Intake Report.
+- scope-analyzer-agent will determine pipeline scale and route appropriately:
+  - TRIVIAL → direct to build agent (skip coordinator)
+  - SMALL → coordinator with streamlined manifest
+  - MEDIUM/LARGE/CRITICAL → coordinator with full manifest
+- If `clarity == needs_clarification` AND scope >= MEDIUM → product-agent first.
+
+### Integration with Scope Analyzer
+The scope-analyzer-agent receives your intake report and:
+1. Assesses blast radius (files affected, lines changed)
+2. Classifies scope: TRIVIAL|SMALL|MEDIUM|LARGE|CRITICAL
+3. Determines which phases/agents are actually needed
+4. Outputs a `scope_manifest` that right-sizes the pipeline
+
+This prevents over-engineering small tasks and reduces hallucinations from invoking unnecessary agents.

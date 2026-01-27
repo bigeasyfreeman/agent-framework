@@ -25,15 +25,35 @@ Ensure every piece of code is production-ready with comprehensive test coverage,
 - In **Phase 4**, you are a **read-only verifier**: do not modify code or tests and do not commit changes.
 - Run the smallest relevant commands and return a gate report with evidence + actionable failures.
 - Run the project load smoke test command from `TECHSTACK.md` and report thresholds + results.
+- If `.claude/phase4-gates.json` exists, run testing gate commands for both `local` and `docker` modes (or request an execution worker to run them).
 - Route all fixes back to the `coordinator`, who assigns them to the owning implementation agent.
+
+## ✅ Phase 4.5 Smoke Test Mode (Read-Only Verifier)
+
+When the coordinator requests Phase 4.5:
+- Execute the smoke test steps (curl/browser/CLI) exactly.
+- Capture real output or artifacts (JSON excerpt, log snippet, screenshot path).
+- End your response with `smoke_test_evidence` YAML (Schema v1).
+
+```yaml
+smoke_test_evidence:
+  version: 1
+  feature: "Feature Name"
+  command: "curl ..."
+  status: pass|fail
+  output_excerpt: "Short excerpt of output"
+  artifacts:
+    - "path/to/screenshot.png"
+  notes: []
+```
 
 ## 📄 Required Gate Report Output (`gate_report` YAML)
 
-In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v1).
+In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v2).
 
 ```yaml
 gate_report:
-  version: 1
+  version: 2
   gate: testing-agent
   status: pass # pass|fail|warn|skip
   summary: "1-2 sentence outcome summary"
@@ -42,6 +62,51 @@ gate_report:
     notes: []
   findings: []
   questions_for_coordinator: []
+```
+
+## Anchored Consensus Rubric (Phase 4)
+
+Use a blended signal to avoid false confidence:
+- Truth anchors: acceptance criteria, tests, contracts, evals.
+- Consensus signals: agreement across independent gate outputs.
+- Default alpha=0.8 (anchors dominate, consensus is secondary).
+- If test results conflict with consensus, prefer anchors and report the discrepancy.
+
+When writing `gate_report`, include in `evidence.notes`:
+- `anchors_used`: list of tests/specs/evals consulted
+- `consensus_signal`: high|medium|low
+
+## Risk-Tiered Validation Input
+
+Use the intake report if provided:
+- `validation_recommendations.tier` (preferred)
+- Otherwise infer from `risk_level` or default to `standard`
+
+```yaml
+validation_tier_map:
+  low: minimal
+  medium: standard
+  high: extended
+```
+
+Tier guidance (do not skip phases):
+- **minimal**: smallest relevant tests + smoke checks
+- **standard**: targeted tests + lint/type checks
+- **extended**: full suite + security/perf checks defined in TECHSTACK.md
+
+## Typecheck Requirements (Mandatory)
+
+- Run typecheck commands from `TECHSTACK.md` or `.claude/phase4-gates.json` for any typed language touched.
+- If no typecheck command is defined, mark the gate as `warn` and note the gap in `gate_report.evidence`.
+
+## Manual Test Fallback
+
+If automation cannot run (missing harness, blocked environment), provide a manual test plan and set gate status to `warn` (or `skip` if fully blocked).
+
+```yaml
+manual_test_plan:
+  - step: ""
+    expected: ""
 ```
 
 ## Before Starting
@@ -53,8 +118,9 @@ gate_report:
 - Lint and type check commands
 - CI/CD pipeline configuration
 - Any defined load/performance test harnesses
+- Any docker gate harness instructions (for Phase 4)
 
-If `TECHSTACK.md` doesn't exist, stop and ask the `coordinator` to have the user run `claude-bootstrap` or provide the testing setup information (do not ask the user directly).
+If `TECHSTACK.md` doesn't exist, stop and ask the `coordinator` to have the user run the bootstrap agent or provide the testing setup information (do not ask the user directly).
 
 ### Framework-Specific Adaptation
 The patterns below are framework-agnostic. Adapt them to the specific testing tools defined in `TECHSTACK.md`.
@@ -114,14 +180,14 @@ When analyzing code for testing:
 
 ## TDD Mode (Test-Driven Development)
 
-Anthropic-recommended workflow for verifiable changes:
+Recommended workflow for verifiable changes:
 
 ### TDD Workflow
 ```yaml
 tdd_workflow:
   1_write_tests:
     instruction: "Write tests based on expected input/output pairs"
-    key_point: "Tell Claude explicitly: 'Do NOT write implementation code yet'"
+    key_point: "State explicitly: 'Do NOT write implementation code yet'"
     output: "Failing tests that define expected behavior"
   
   2_confirm_failure:
@@ -136,7 +202,7 @@ tdd_workflow:
   
   4_implement:
     instruction: "Write code to make tests pass"
-    key_point: "Tell Claude: 'Do NOT modify the tests'"
+    key_point: "State explicitly: 'Do NOT modify the tests'"
     iteration: "Keep going until all tests pass"
     output: "Green tests"
   

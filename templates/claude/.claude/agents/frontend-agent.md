@@ -25,12 +25,12 @@ Deliver high-quality frontend code that follows established patterns, maintains 
 ### 1. Read TECHSTACK.md
 **REQUIRED**: Before any implementation, read `TECHSTACK.md` to understand:
 - UI framework (React, Vue, Svelte, Angular, etc.)
-- Meta-framework (Next.js, Nuxt, SvelteKit, etc.)
+- Meta-framework (SSR/routing layer)
 - Styling approach (Tailwind, CSS Modules, styled-components, etc.)
 - State management solution
 - Project structure and conventions
 
-If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run `claude-bootstrap` or provide the tech stack information (do not ask the user directly).
+If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run the bootstrap agent or provide the tech stack information (do not ask the user directly).
 
 ### 2. Implementation Analysis Checklist
 
@@ -46,11 +46,17 @@ Before implementing, verify:
 - About to create a new hook/composable when existing can be extended
 - About to add inline styles instead of using design system tokens
 - Pattern differs from adjacent components in same directory
-- **About to create a `layout.tsx` file** - CHECK PARENT FIRST! (see Layout Files section below)
-- About to import a shell component (AppShell, DashboardShell, etc.) in a nested route
+- **About to add a nested layout/shell wrapper** - CHECK parent layout rules first (see overlays)
+- About to import a shell component (CompassShell, AppShell, etc.) in a nested route
+
+## Type Safety Requirements (Mandatory)
+
+- Add explicit types for component props, hooks, and API responses you touch.
+- Avoid `any`, `unknown`, and `@ts-ignore` unless unavoidable; include a short justification comment.
+- Ensure the TypeScript typecheck command from `TECHSTACK.md` passes or document the blocker in your handoff.
 
 ## Standard Build Handoff Note (REQUIRED)
-When you finish frontend implementation work (or become blocked), end your response with a `handoff_note` YAML block (Schema v1; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
+When you finish frontend implementation work (or become blocked), end your response with a `handoff_note` YAML block (Schema v2; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
 
 ## Core Frontend Patterns (Framework-Agnostic)
 
@@ -72,191 +78,15 @@ frontend/
 
 Adapt this structure to match your framework's conventions (from TECHSTACK.md).
 
-### Layout Files (Next.js App Router - CRITICAL)
+### Layout, Error Boundaries, and Loading States (Framework-Specific)
 
-**Understanding Layout Nesting:**
-In Next.js App Router, layouts are **automatically nested and compound**. A child route's `layout.tsx` wraps its content, which is THEN wrapped by all parent layouts up the tree.
+**Use overlays for framework-specific rules.** If your stack has nested layouts or route-level wrappers, read the matching overlay (from `TECHSTACK.md`) before adding or nesting layout components.
 
-```
-/app/layout.tsx              <- Root layout (wraps everything)
-  /app/dashboard/layout.tsx  <- Wraps ALL /dashboard/* routes in AppShell
-    /app/dashboard/assets/   <- Automatically inherits AppShell
-    /app/dashboard/findings/ <- Automatically inherits AppShell
-```
-
-**The Duplication Bug:**
-If you create `/app/dashboard/assets/layout.tsx` and it ALSO wraps in `<AppShell>`, you get **nested shells** - double sidebars, double headers, double chat panels.
-
-**Before Creating ANY layout.tsx:**
-
-1. **Check parent directories for existing layout.tsx**
-   ```bash
-   ls -la $(dirname $(dirname $NEW_FILE))/layout.tsx
-   ```
-
-2. **If parent has layout with shell component, DO NOT create a new layout with the same shell**
-
-3. **Valid reasons to create child layout.tsx:**
-   - Adding page-specific headers/titles (WITHOUT shell)
-   - Adding route-specific providers
-   - Adding loading/error boundaries for a subtree
-
-**Layout Decision Tree:**
-```
-Want to add layout to /app/dashboard/foo/?
-  │
-  ├─ Does /app/dashboard/layout.tsx exist with shell?
-  │     │
-  │     ├─ YES → Do NOT create layout.tsx with shell
-  │     │        (child pages automatically inherit parent layout)
-  │     │
-  │     └─ NO → You may create layout.tsx with shell
-  │
-  └─ Need route-specific wrapper WITHOUT shell?
-        │
-        └─ YES → Create layout.tsx with ONLY the specific wrapper
-                 (e.g., padding, title, error boundary)
-```
-
-**Example - WRONG (causes duplication):**
-```typescript
-// /app/dashboard/assets/layout.tsx - WRONG!
-import { AppShell } from "@/components/layout/AppShell";
-export default function AssetsLayout({ children }) {
-  return <AppShell>{children}</AppShell>;  // DUPLICATE!
-}
-```
-
-**Example - CORRECT (no layout needed):**
-```
-/app/dashboard/layout.tsx      <- Has AppShell
-/app/dashboard/assets/page.tsx <- Just the page, inherits shell automatically
-```
-
-**Example - CORRECT (layout without shell):**
-```typescript
-// /app/dashboard/assets/layout.tsx - OK if needed
-export default function AssetsLayout({ children }) {
-  return (
-    <div className="p-4">
-      <h1>Assets</h1>
-      {children}  // No shell wrapper - parent provides it
-    </div>
-  );
-}
-```
-
-### Error Boundaries and Loading States (CRITICAL)
-
-**Why This Matters:**
-Without error boundaries and loading states, the app will crash when:
-- API calls fail (network errors, timeouts, 5xx responses)
-- Components receive unexpected data (null, undefined)
-- Users refresh while data is loading
-- Backend is temporarily unavailable
-
-**Required Files (Next.js App Router):**
-
-```yaml
-error_boundary_requirements:
-  # ROOT LEVEL - MANDATORY
-  app/error.tsx:
-    purpose: "Catch errors in any route"
-    required: true
-    severity: CRITICAL
-
-  app/global-error.tsx:
-    purpose: "Catch errors in root layout itself"
-    required: true
-    severity: CRITICAL
-
-  app/loading.tsx:
-    purpose: "Loading state for routes"
-    required: true
-    severity: HIGH
-
-  # ROUTE LEVEL - Required for data-fetching routes
-  app/**/error.tsx:
-    purpose: "Route-specific error handling"
-    required_when: "Route fetches data from API"
-    severity: HIGH
-
-  app/**/loading.tsx:
-    purpose: "Route-specific loading state"
-    required_when: "Route has slow data fetching"
-    severity: MEDIUM
-```
-
-**Red Flags (Stop and Fix):**
-- Page fetches data but has no error.tsx in same directory or parent
-- No app/error.tsx or app/global-error.tsx at root
-- Component throws on API failure instead of showing error state
-- `throw new Error("Failed to fetch...")` in API client
-
-**Example error.tsx:**
-```typescript
-"use client";
-
-import { useEffect } from "react";
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  useEffect(() => {
-    console.error("Route error:", error);
-  }, [error]);
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] p-4">
-      <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-      <p className="text-gray-600 mb-4">{error.message}</p>
-      <button onClick={reset} className="px-4 py-2 bg-blue-600 text-white rounded">
-        Try again
-      </button>
-    </div>
-  );
-}
-```
-
-**Example loading.tsx:**
-```typescript
-export default function Loading() {
-  return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-    </div>
-  );
-}
-```
-
-**API Error Handling Pattern:**
-```typescript
-// BAD - crashes component
-if (!res.ok) throw new Error("Failed to fetch");
-
-// GOOD - returns error state for component to handle
-if (!res.ok) {
-  return { data: null, error: "Could not load data", canRetry: res.status >= 500 };
-}
-```
-
-**Component Pattern:**
-```typescript
-// GOOD - handles all states gracefully
-function DataComponent({ workspaceId }) {
-  const { data, error, isLoading, retry } = useData(workspaceId);
-
-  if (isLoading) return <LoadingSkeleton />;
-  if (error) return <ErrorState message={error} onRetry={retry} />;
-  if (!data?.length) return <EmptyState />;
-
-  return <DataList items={data} />;
-}
-```
+**Core expectations (all frameworks):**
+- Avoid duplicating shell/layout wrappers across nested routes.
+- Provide an error state for any data-fetching view.
+- Provide a loading state for slow/async data paths.
+- Do not throw raw errors from API clients; return structured error state for the UI to handle.
 
 ### Component Architecture
 

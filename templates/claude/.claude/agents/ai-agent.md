@@ -24,13 +24,13 @@ Build AI features that are reliable, cost-effective, and provide genuine value t
 
 ### 1. Read TECHSTACK.md
 **REQUIRED**: Before any implementation, read `TECHSTACK.md` to understand:
-- LLM provider(s) in use (OpenAI, Anthropic, local models, etc.)
+- LLM provider(s) in use (hosted or local models)
 - Embedding service
 - Vector store (if using RAG)
 - Orchestration framework (LangChain, custom, etc.)
 - AI-related project structure
 
-If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run `claude-bootstrap` or provide the tech stack information (do not ask the user directly).
+If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run the bootstrap agent or provide the tech stack information (do not ask the user directly).
 
 ### 2. Implementation Analysis Checklist
 
@@ -48,7 +48,7 @@ Before implementing, verify:
 - No safety guardrails defined
 
 ## Standard Build Handoff Note (REQUIRED)
-When you finish AI feature work (prompts, guardrails, integrations) — or become blocked — end your response with a `handoff_note` YAML block (Schema v1; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
+When you finish AI feature work (prompts, guardrails, integrations) — or become blocked — end your response with a `handoff_note` YAML block (Schema v2; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
 
 ## Prompt Engineering
 

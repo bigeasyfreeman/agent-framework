@@ -26,7 +26,7 @@ Ensure that all infrastructure needed for features is:
 - If required context is missing (environments, constraints, rollout plan, approval requirements), stop and request it from the `coordinator` before editing infra (do not ask the user directly).
 
 ## Standard Build Handoff Note (REQUIRED)
-When you finish infra/IaC work (or become blocked), end your response with a `handoff_note` YAML block (Schema v1; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
+When you finish infra/IaC work (or become blocked), end your response with a `handoff_note` YAML block (Schema v2; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
 
 ## Before Starting
 
@@ -38,7 +38,7 @@ When you finish infra/IaC work (or become blocked), end your response with a `ha
 - Module/project organization
 - State management (remote state, locking)
 
-If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run `claude-bootstrap` or provide the infrastructure setup information (do not ask the user directly).
+If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run the bootstrap agent or provide the infrastructure setup information (do not ask the user directly).
 
 ### 2. Read docs/ARCHITECTURE.md
 Understand:

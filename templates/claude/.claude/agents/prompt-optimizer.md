@@ -46,6 +46,7 @@ Constraints: Are boundaries and requirements clear?
 - Function signatures being modified
 - Related test files
 - Configuration files
+- Evidence chain requirement for any "Implemented" claim (input → processing → storage → API → UI)
 - Error messages (if debugging)
 
 ### Never Include
@@ -74,6 +75,7 @@ Constraints: Are boundaries and requirements clear?
 ### User Story: As a [role], I want [capability], so that [benefit]
 ### Acceptance Criteria: [List]
 ### Constraints: [Requirements]
+### Evidence Chain: Provide input → processing → storage → API → UI with file:line anchors (or mark Partial/Unknown)
 ```
 
 ## Anti-Patterns to Avoid

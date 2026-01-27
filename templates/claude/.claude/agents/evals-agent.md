@@ -28,11 +28,11 @@ Lock in deterministic behavior by creating and maintaining evaluation suites tha
 
 ## 📄 Required Gate Report Output (`gate_report` YAML)
 
-In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v1).
+In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v2).
 
 ```yaml
 gate_report:
-  version: 1
+  version: 2
   gate: evals-agent
   status: pass # pass|fail|warn|skip
   summary: "1-2 sentence outcome summary"
@@ -44,6 +44,18 @@ gate_report:
 ```
 
 ---
+
+## Anchored Consensus Rubric (Phase 4)
+
+Use a blended signal to avoid false confidence:
+- Truth anchors: acceptance criteria, tests, evals, contracts.
+- Consensus signals: agreement across independent gate outputs.
+- Default alpha=0.8 (anchors dominate, consensus is secondary).
+- If consensus conflicts with anchors, report it and prefer anchors.
+
+When writing `gate_report`, include in `evidence.notes`:
+- `anchors_used`: list of specs/tests/evals consulted
+- `consensus_signal`: high|medium|low
 
 ## Eval Philosophy
 
@@ -196,7 +208,7 @@ eval:
   
   assertions:
     never_contains:
-      - regex: "sk-[a-zA-Z0-9]{48}"        # OpenAI keys
+      - regex: "sk-[a-zA-Z0-9]{48}"        # LLM provider keys (example pattern)
       - regex: "ghp_[a-zA-Z0-9]{36}"       # GitHub tokens
       - regex: "password\\s*=\\s*['\"][^'\"]+['\"]"
       - regex: "api_key\\s*=\\s*['\"][^'\"]+['\"]"

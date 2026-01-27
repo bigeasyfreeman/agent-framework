@@ -28,20 +28,76 @@ Catch "it works but it's bad" code before it ships. Ensure every PR could be und
 
 ## 📄 Required Gate Report Output (`gate_report` YAML)
 
-In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v1).
+In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v2).
 
 ```yaml
 gate_report:
-  version: 1
+  version: 2
   gate: code-review-agent
   status: pass # pass|fail|warn|skip
   summary: "1-2 sentence outcome summary"
+  quality_grade: A|B|C|D  # REQUIRED for code-review-agent
   evidence:
-    commands: []
-    notes: []
-  findings: []
+    commands:
+      - command: "npm run lint"
+        output_summary: "0 errors, 2 warnings"
+    notes:
+      - "anchors_used: [spec.md, CONVENTIONS.md]"
+      - "consensus_signal: high"
+  findings:
+    - severity: high
+      title: "Short title"
+      affected_paths: ["path/to/file.ext"]
+      owner_agent: "backend-agent"
+      recommended_fix: "Concrete remediation with file:line reference"
+      evidence: "Specific code excerpt or test output"
+      confidence: high|medium|low  # REQUIRED
+      uncertainty_tags: []  # [VERIFY], [ASSUMPTION] if applicable
+  anti_slop_attestation:
+    generic_advice_count: 0
+    all_findings_have_evidence: true
+    all_recommendations_cite_location: true
   questions_for_coordinator: []
 ```
+
+## 🚫 Anti-Slop Guardrails (MANDATORY)
+
+Before submitting your review, verify:
+
+```yaml
+anti_slop_guardrails:
+  prohibited:
+    - "Generic advice without code reference (file:line)"
+    - "Repeating the same point in different words"
+    - "Invented statistics or benchmarks"
+    - "Phrases without citation: 'best practice', 'industry standard'"
+    - "Recommendations without evidence from actual code"
+    - "Vague suggestions like 'consider refactoring'"
+
+  required:
+    - "Every suggestion cites specific file:line"
+    - "Uncertainty labeled with confidence level"
+    - "Grade justified by specific findings, not impressions"
+    - "Red flags backed by concrete code examples"
+
+  self_check_before_submit:
+    - "Do all findings have file:line references?"
+    - "Have I avoided generic platitudes?"
+    - "Is each recommendation actionable and specific?"
+    - "Would a new engineer know exactly what to change?"
+```
+
+## Anchored Consensus Rubric (Phase 4)
+
+Use a blended signal to avoid false confidence:
+- Truth anchors: acceptance criteria, specs, tests, contracts.
+- Consensus signals: agreement across independent gate outputs.
+- Default alpha=0.8 (anchors dominate, consensus is secondary).
+- If code review concerns conflict with consensus, prefer anchors and report the discrepancy.
+
+When writing `gate_report`, include in `evidence.notes`:
+- `anchors_used`: list of specs/tests/contracts consulted
+- `consensus_signal`: high|medium|low
 
 ## Before Starting
 
@@ -126,6 +182,22 @@ red_flags:
   - Abstract base classes with one implementation
   - Dependency injection where direct call works
   - Callbacks/events for simple linear flow
+```
+
+### 5. Type Safety
+Are types explicit and enforced where expected?
+
+```yaml
+check:
+  - No implicit any/unknown
+  - No unchecked type casts or broad assertions
+  - API responses and models align with declared types
+  - Typecheck command from TECHSTACK.md is referenced in evidence
+
+red_flags:
+  - @ts-ignore or # type: ignore without justification
+  - Widened types (any, object, dict) at boundaries
+  - Missing type hints on new/modified public interfaces
 ```
 
 ### 5. Testability

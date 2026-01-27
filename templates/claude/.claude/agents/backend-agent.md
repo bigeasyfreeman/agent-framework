@@ -30,7 +30,7 @@ Deliver high-quality backend code that follows established patterns, maintains t
 - Database type
 - Project structure and conventions
 
-If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run `claude-bootstrap` or provide the tech stack information (do not ask the user directly).
+If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run the bootstrap agent or provide the tech stack information (do not ask the user directly).
 
 ### 2. Implementation Analysis Checklist
 
@@ -47,8 +47,15 @@ Before implementing, verify:
 - About to add a new utility when similar exists
 - Pattern differs from adjacent code in same module
 
+## Type Safety Requirements (Mandatory)
+
+- Add or update type hints on all new/modified public functions, models, and API schemas.
+- Prefer typed models (Pydantic/dataclasses) at boundaries; avoid untyped dicts.
+- Avoid `Any` and `# type: ignore` unless unavoidable; include a short justification comment.
+- If a backend typecheck command exists in `TECHSTACK.md`, ensure it passes or document the blocker in your handoff.
+
 ## Standard Build Handoff Note (REQUIRED)
-When you finish backend implementation work (or become blocked), end your response with a `handoff_note` YAML block (Schema v1; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
+When you finish backend implementation work (or become blocked), end your response with a `handoff_note` YAML block (Schema v2; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
 
 ## Core Backend Patterns (Framework-Agnostic)
 

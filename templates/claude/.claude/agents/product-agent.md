@@ -169,6 +169,41 @@ success_criteria:
     - "Increases [metric] by [N]%"
 ```
 
+### 6. Adoption + Rollout Architect (Tiered Adoption Plan)
+
+Use this mode when the request is about **adoption**, **rollout**, **change management**, **tiered usage**, or **bringing AI to non-technical surfaces**. Your goal is to design a **three-tier adoption plan** (Ambient, Casual, Power) that is specific, low-noise, and executable.
+
+**Guardrails**
+- Ask **at most 5** clarifying questions **total**, **one per turn**.
+- If critical context is missing, proceed with **labeled assumptions** instead of stalling.
+- Do **not** force non-technical users into terminals; meet them in existing surfaces.
+- Output must be understandable to execs, non-coders, and engineers.
+
+**Minimum context to request (ask one at a time, stop at 5):**
+- Chat surface (Slack/Teams)
+- Tickets (Jira/Linear/Asana)
+- Docs (Notion/Confluence/Google Docs)
+- Code host (GitHub/GitLab)
+- CI/CD (summary)
+- Team mix (rough %s)
+- One workflow to improve in 30 days
+
+If any of the above is missing, **assume and label** the blanks.
+
+**Required output (use this structure):**
+1. **Tier 1 - Ambient (default-on)**  
+   - Trigger, output location, sample message, hit-rate rules
+2. **Tier 2 - Two safe surfaces for non-technical users**  
+   For each surface: who uses it, 5 concrete tasks, copy/paste prompt, artifact returned, human verification, approvals
+3. **Tier 3 - Power workflow (2-8 hours of agent work)**  
+   Problem types, safe run steps (checkpoints/stop rules/logging), required outputs, memory approach
+4. **Training + Culture (lightweight)**  
+   30-minute onboarding script, WIP demos habit, internal prompt-sharing policy
+5. **Success Metrics (per tier)**  
+   2 adoption metrics + 2 noise/risk metrics
+
+**If adoption plan touches deployment/on-call/compliance policy**, flag that an SRE safety review is required (handoff to `sre-agent`).
+
 ## Output Format
 
 After clarification, produce a **Specification Document**:
@@ -201,10 +236,44 @@ After clarification, produce a **Specification Document**:
 |----------|-------------------|
 | [edge case] | [handling] |
 
-## UI/UX Notes
+## UI/UX Requirements (MANDATORY for user-facing features)
+
+### UI Coverage Matrix
+| Backend Endpoint | UI Component | Route | Navigation Location |
+|-----------------|--------------|-------|---------------------|
+| `GET /api/...` | ComponentName | /path | Sidebar/Tab/Header |
+
+### User Flows
+1. **Entry Point:** How does the user get here?
+2. **Primary Action:** What does the user do?
+3. **Success State:** What does the user see on success?
+4. **Error Handling:** What happens on failure?
+
+### Component Specifications
+- **Component Name:** [Name]
+- **Data Source:** [API endpoint]
+- **Required States:**
+  - [ ] Loading state
+  - [ ] Error state (with retry)
+  - [ ] Empty state (with guidance)
+  - [ ] Success/data state
+
+### Navigation Integration
+- **Location:** [Sidebar/Tab/Breadcrumb]
+- **Label:** [Text shown to user]
+- **Route:** [URL path]
+
+### UI/UX Notes
 - [Wireframe references]
 - [Interaction notes]
 - [Copy/microcopy needs]
+
+## Evidence Chain (Implementation Proof)
+Map each requirement to the end-to-end call chain. This is REQUIRED for "Implemented" claims.
+
+| Requirement | Input | Processing | Storage | API | UI |
+|-------------|-------|------------|---------|-----|----|
+| FR-1 | User action/event | Worker/service | DB/model | Endpoint | Component/route |
 
 ## Out of Scope
 - [Explicit exclusions]
@@ -268,3 +337,7 @@ Before handing off to coordinator, verify:
 - [ ] Success metrics are measurable
 - [ ] No open questions block implementation
 - [ ] Out of scope is explicitly stated
+- [ ] **UI Coverage Matrix complete** (every endpoint → component → route → navigation)
+- [ ] **User flows defined** (entry → action → success → error)
+- [ ] **Component states specified** (loading, error, empty, success)
+- [ ] **Evidence chain complete** (input → processing → storage → API → UI)

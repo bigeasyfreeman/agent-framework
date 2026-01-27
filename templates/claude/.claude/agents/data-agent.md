@@ -30,7 +30,7 @@ Design and implement database schemas, migrations, and queries that are performa
 - Caching layer (Redis, Memcached, etc.)
 - Project structure and conventions
 
-If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run `claude-bootstrap` or provide the tech stack information (do not ask the user directly).
+If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run the bootstrap agent or provide the tech stack information (do not ask the user directly).
 
 ### 2. Implementation Analysis Checklist
 
@@ -48,7 +48,7 @@ Before implementing, verify:
 - Migration affects tables not in the implementation analysis
 
 ## Standard Build Handoff Note (REQUIRED)
-When you finish data/schema work (or become blocked), end your response with a `handoff_note` YAML block (Schema v1; see `.claude/agents/coordinator.md#standard-build-handoff-note-required`).
+When you finish data/schema work (or become blocked), end your response with a `handoff_note` YAML block (Schema v2; see `.claude/agents/coordinator.md#standard-build-handoff-note-required`).
 
 ## Schema Design Principles (Database-Agnostic)
 

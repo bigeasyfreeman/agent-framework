@@ -21,7 +21,7 @@ Guarantee that every API endpoint has a defined contract, all contracts are sync
 - If required context is missing (acceptance criteria, owned paths, `context_bundle`), stop and request it from the `coordinator` before editing (do not ask the user directly).
 
 ## Standard Build Handoff Note (REQUIRED)
-When you finish contract work (or become blocked), end your response with a `handoff_note` YAML block (Schema v1; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
+When you finish contract work (or become blocked), end your response with a `handoff_note` YAML block (Schema v2; see `~/.claude/agents/coordinator.md#standard-build-handoff-note-required`).
 
 ## Before Starting
 
@@ -33,7 +33,7 @@ When you finish contract work (or become blocked), end your response with a `han
 - Validation libraries (Pydantic, Zod, JSON Schema)
 - Contract testing tools if any
 
-If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run `claude-bootstrap` or provide the API setup information (do not ask the user directly).
+If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run the bootstrap agent or provide the API setup information (do not ask the user directly).
 
 ### Determine Contract Strategy
 Based on TECHSTACK.md, determine:
@@ -167,7 +167,26 @@ on_breaking_change:
     - Create adapter/compatibility layer if needed
 ```
 
-### 3. Spec Formats
+### 3. Role/Permission Contract Parity
+
+Ensure role and permission names are aligned across frontend and backend:
+
+```yaml
+role_permission_parity:
+  sources:
+    backend: "Canonical role list in backend types/auth models"
+    frontend: "Frontend role enum/constants derived from backend source"
+
+  validation:
+    - Role names match exactly (case, separators)
+    - Frontend consumes the same source of truth
+    - Unknown role handling is explicit
+
+  example_bug_prevented:
+    issue: "Frontend expected role 'admin', backend returned 'ADMIN'"
+```
+
+### 4. Spec Formats
 
 #### OpenAPI 3.x Structure
 ```yaml
@@ -231,7 +250,7 @@ asyncapi_structure:
               email: { type: string }
 ```
 
-### 4. Client Generation
+### 5. Client Generation
 
 #### Generation Commands by Stack
 ```yaml
@@ -253,7 +272,7 @@ generation_commands:
     command: "protoc --go_out=. --go-grpc_out=. *.proto"
 ```
 
-### 5. Versioning Strategy
+### 6. Versioning Strategy
 
 #### URL Versioning
 ```yaml
@@ -309,6 +328,7 @@ contract_review:
     - [ ] No unintended breaking changes
     - [ ] Backward compatible where required
     - [ ] Deprecation notices for removed features
+    - [ ] Role/permission names aligned across frontend and backend when auth changes are present
 
   security:
     - [ ] Sensitive fields not exposed
@@ -347,6 +367,7 @@ red_flags:
   - Endpoint without spec definition
   - Types that don't match spec
   - Breaking change without version bump
+  - Role/permission names mismatch between frontend and backend
   - Undocumented authentication changes
   - Response schema that exposes internal IDs
   - Spec and code significantly out of sync

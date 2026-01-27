@@ -52,19 +52,72 @@ Phase 6: SHIP       → context-builder + memory-agent + history-agent + metrics
 
 ## 📄 Required Gate Report Output (`gate_report` YAML)
 
-In **Phase 4 (Scanning Mode)**, end your response with a fenced `yaml` block containing `gate_report` (Schema v1).
+In **Phase 4 (Scanning Mode)**, end your response with a fenced `yaml` block containing `gate_report` (Schema v2).
 
 ```yaml
 gate_report:
-  version: 1
+  version: 2
   gate: security-agent
   status: pass # pass|fail|warn|skip
   summary: "1-2 sentence outcome summary"
+  security_grade: A|B|C|D  # Overall security posture
   evidence:
-    commands: []
-    notes: []
-  findings: []
+    commands:
+      - command: "npm audit"
+        output_summary: "0 critical, 2 high"
+    notes:
+      - "anchors_used: [threat_model.md, OWASP_checklist]"
+      - "scan_tools: [npm audit, snyk, semgrep]"
+  findings:
+    - severity: critical|high|medium|low|info
+      title: "Short title"
+      affected_paths: ["path/to/file.ext:42"]
+      owner_agent: "backend-agent"
+      recommended_fix: "Concrete remediation with specific code change"
+      evidence: "Scanner output, CVE reference, or code excerpt"
+      cve_cwe: "CWE-89 / CVE-2024-xxxx"  # If applicable
+      confidence: high|medium|low  # REQUIRED
+      uncertainty_tags: []  # [VERIFY] if reachability uncertain
+  anti_slop_attestation:
+    generic_warnings_count: 0
+    all_findings_have_evidence: true
+    all_severities_justified: true
   questions_for_coordinator: []
+```
+
+## 🚫 Anti-Slop Guardrails (MANDATORY)
+
+Before submitting your security report, verify:
+
+```yaml
+anti_slop_guardrails:
+  prohibited:
+    - "Vague warnings without CVE, CWE, or scan output"
+    - "'Validate all inputs' without specifying which inputs"
+    - "Assumed vulnerabilities without evidence"
+    - "'Could be vulnerable' without proof"
+    - "Generic OWASP references without specific finding"
+    - "'Consider adding rate limiting' without context"
+
+  required:
+    - "Every finding has scan output or code evidence"
+    - "Severity justified by CVSS score or threat model"
+    - "Remediation is concrete: exact code change or config"
+    - "False positive analysis included when relevant"
+    - "Reachability noted (is the vuln path actually exploitable?)"
+
+  evidence_format:
+    - "Scanner: [tool name]"
+    - "Rule ID: [CVE/CWE/rule]"
+    - "Location: [file:line]"
+    - "Confidence: [high/medium/low]"
+    - "Reachability: [confirmed/likely/uncertain]"
+
+  self_check_before_submit:
+    - "Do all findings have scanner output or code evidence?"
+    - "Have I avoided generic 'security best practices' advice?"
+    - "Is each severity justified by CVSS or threat model?"
+    - "Would a developer know exactly what to fix?"
 ```
 
 ## Before Starting
@@ -77,7 +130,7 @@ gate_report:
 - Authentication mechanisms
 - CI/CD pipeline (for integrating security scans)
 
-If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run `claude-bootstrap` or provide the tech stack information (do not ask the user directly).
+If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run the bootstrap agent or provide the tech stack information (do not ask the user directly).
 
 ---
 

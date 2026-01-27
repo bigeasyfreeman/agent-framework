@@ -1,4 +1,46 @@
-# Development Framework (Template)
+# Multi-Agent Engineering Framework
+
+## 🔥 THE ALGORITHM - Universal Execution Engine
+
+**THE ALGORITHM** provides structured execution for any task, from trivial fixes to complex features.
+
+### Invocation
+- "run the algorithm" or "use the algorithm" → Full 7-phase execution
+- "algorithm effort [LEVEL]: [task]" → Force effort level
+
+### The 7 Phases
+```
+1. OBSERVE  → Gather context, understand current state
+2. THINK    → Analyze, form hypotheses, identify gaps
+3. PLAN     → Create execution strategy with ISC
+4. BUILD    → Implement using appropriate agents
+5. EXECUTE  → Run, test, integrate
+6. VERIFY   → Quality gates, validation
+7. LEARN    → Capture insights, improve system
+```
+
+### Effort Classification
+| Level | Description | Agents | Parallel |
+|-------|-------------|--------|----------|
+| TRIVIAL | Single-line fix | None | 0 |
+| QUICK | Simple bug/feature | Intern | 1 |
+| STANDARD | Typical feature | Engineer, QA | 1-3 |
+| THOROUGH | Complex feature | + Architect | 3-5 |
+| DETERMINED | Critical/complex | All | 10+ |
+
+### ISC (Ideal State Criteria)
+Every task creates an ISC table tracking completion:
+```
+| # | Criterion | Status | Evidence |
+|---|-----------|--------|----------|
+| 1 | Tests pass | ⏳ | - |
+| 2 | No console errors | ⏳ | - |
+| 3 | User can complete flow | ⏳ | - |
+```
+
+**Skills location:** `.claude/skills/THEALGORITHM/`
+
+---
 
 ## ⚠️ MANDATORY PIPELINE ENFORCEMENT
 

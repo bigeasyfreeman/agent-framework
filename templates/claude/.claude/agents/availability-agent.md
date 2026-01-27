@@ -33,11 +33,11 @@ Prevent runtime crashes and ensure graceful degradation by validating:
 
 ## 📄 Required Gate Report Output (`gate_report` YAML)
 
-In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v1).
+In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v2).
 
 ```yaml
 gate_report:
-  version: 1
+  version: 2
   gate: availability-agent
   status: pass # pass|fail|warn|skip
   summary: "1-2 sentence outcome summary"
@@ -66,107 +66,23 @@ Phase 5: CLEANUP   → owning agent applies fixes; cleanup-agent polishes
 
 ## Core Requirements
 
-### 1. Error Boundaries (Next.js App Router)
+### 1. Error Boundaries (Framework-Specific)
 
-**The Problem:** In Next.js App Router, unhandled errors in components crash the entire route or app.
+**The Problem:** Unhandled errors in components crash the route/app.
 
-**Required Files:**
+**Requirements (adapt to your framework; see overlays):**
+- A root-level error boundary (or equivalent) exists.
+- Route-level error boundaries exist for data-fetching views.
+- Errors are logged and provide a user recovery path.
 
-```yaml
-error_boundary_requirements:
-  root_error:
-    file: "app/error.tsx"
-    required: true
-    purpose: "Catch errors in root layout and below"
-    must_include:
-      - "use client" directive
-      - Reset button to retry
-      - Error message display
-      - Logging of error
-
-  root_global_error:
-    file: "app/global-error.tsx"
-    required: true
-    purpose: "Catch errors in root layout itself"
-    must_include:
-      - "use client" directive
-      - Own <html> and <body> tags
-      - Recovery mechanism
-
-  route_errors:
-    pattern: "app/**/error.tsx"
-    required_for: "Routes with data fetching"
-    recommended_for: "All routes"
-```
-
-**Example error.tsx:**
-```typescript
-"use client";
-
-import { useEffect } from "react";
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  useEffect(() => {
-    // Log to error tracking service
-    console.error("Route error:", error);
-  }, [error]);
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] p-4">
-      <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-      <p className="text-gray-600 mb-4">
-        {error.message || "An unexpected error occurred"}
-      </p>
-      <button
-        onClick={reset}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        Try again
-      </button>
-    </div>
-  );
-}
-```
-
-**Validation Rule:** Every route directory that contains a `page.tsx` with data fetching SHOULD have an `error.tsx`.
-
-### 2. Loading States (Next.js App Router)
+### 2. Loading States (Framework-Specific)
 
 **The Problem:** Users see nothing while data loads, leading to confusion or perceived crashes.
 
-**Required Files:**
-
-```yaml
-loading_state_requirements:
-  root_loading:
-    file: "app/loading.tsx"
-    required: true
-    purpose: "Loading state for root and child routes"
-
-  route_loading:
-    pattern: "app/**/loading.tsx"
-    required_for: "Routes with slow data fetching"
-    recommended_for: "All data-fetching routes"
-```
-
-**Example loading.tsx:**
-```typescript
-export default function Loading() {
-  return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-    </div>
-  );
-}
-```
-
-**Validation Rule:** Every route with async data fetching SHOULD have a `loading.tsx`.
+**Requirements (adapt to your framework; see overlays):**
+- A root-level loading state exists.
+- Route-level loading states exist for slow/async views.
+- Loading states are visible and communicate progress.
 
 ### 3. API Resilience
 
@@ -377,8 +293,8 @@ smoke_tests:
 ### Error Boundary Coverage
 | Route | Has error.tsx | Has loading.tsx | Data Fetching |
 |-------|--------------|-----------------|---------------|
-| /dashboard | Yes | Yes | Yes |
-| /dashboard/assets | No | No | Yes |
+| /compass | Yes | Yes | Yes |
+| /compass/assets | No | No | Yes |
 
 ### API Resilience Issues
 | File | Line | Issue | Severity |

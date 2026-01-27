@@ -39,26 +39,49 @@ If the coordinator provides `handoff_note` blocks from build agents, treat them 
 - Use `decisions`/`risks` to target cross-boundary failure modes
 - Surface missing handoffs as a blocker (do not guess what changed)
 
-### 2. Dependency & Build Coherence
+### 2. Anchored Consensus Check
+- Compare handoff notes and interfaces for agreement.
+- Validate consensus against truth anchors from Phase 0.5 (acceptance criteria, tests, contracts).
+- If consensus conflicts with anchors, flag as a blocker and route to the coordinator.
+
+### 3. Dependency & Build Coherence
 - Reconcile imports, exports, and module boundaries.
 - Resolve merge conflicts or duplicated helpers.
 - Verify version bumps or config changes are consistent.
 
-### 3. Targeted Integration Verification
+### 4. Targeted Integration Verification
 - Run the smallest cross‑boundary checks:
   - Typecheck
   - Contract validation
   - Minimal integration tests
 - If any fail, route back to owning build agent.
 
-### 4. Produce Integration Report + Handoff Note
-Output the integration report, then a `handoff_note` (Schema v1) so Phase 4 gates have a single, standardized summary to consume.
+### 5. Produce Integration Verification + Report + Handoff Note
+Output `integration_verification` (Phase 3.5 contract), then the integration report, then a `handoff_note` (Schema v2) so Phase 4 gates have a single, standardized summary to consume.
+
+```yaml
+integration_verification:
+  features:
+    - name: "Feature Name"
+      backend_exists: true|false
+      api_endpoint: "/api/path"
+      api_returns_data: true|false  # Actually tested, not assumed
+      ui_component: "ComponentName.tsx"
+      ui_displays_data: true|false  # Actually tested, not assumed
+      smoke_test_command: "curl ..."
+      verdict: COMPLETE|INCOMPLETE|BLOCKED
+  blocking_issues: []
+  proceed: true|false
+```
 
 ```yaml
 integration_report:
   status: pass|fail
   handoff_notes_reviewed: [] # optional: list of from_agent values
   checked_interfaces: []   # e.g., "User API ↔ UI types"
+  truth_anchors_checked: [] # specs/tests/contracts used as anchors
+  consensus_signal: ""     # high|medium|low agreement across handoffs
+  anchor_conflicts: []     # conflicts between consensus and anchors
   conflicts_resolved: []   # paths/issues fixed
   commands_run: []         # exact commands
   remaining_risks: []      # what Phase 4 should watch
@@ -67,7 +90,7 @@ integration_report:
 
 ```yaml
 handoff_note:
-  version: 1
+  version: 2
   from_agent: integration-agent
   status: done # done|blocked
   summary: "What was integrated and what Phase 4 should watch"
@@ -78,7 +101,13 @@ handoff_note:
   followups:
     - owner_agent: coordinator
       item: "Any required next action"
+  acceptance_checklist:
+    - criterion: "integration_verification included"
+      pass: true
+    - criterion: "Evidence-backed smoke test recorded"
+      pass: true
 ```
+
 
 ## Red Flags
 - Multiple sources of truth for the same interface

@@ -28,11 +28,11 @@ Guarantee that every action, change, error, and significant event is tracked, lo
 
 ## 📄 Required Gate Report Output (`gate_report` YAML)
 
-In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v1).
+In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v2).
 
 ```yaml
 gate_report:
-  version: 1
+  version: 2
   gate: logging-agent
   status: pass # pass|fail|warn|skip
   summary: "1-2 sentence outcome summary"

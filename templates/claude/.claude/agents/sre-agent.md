@@ -20,6 +20,35 @@ Guarantee that every system component is designed for scale, operates reliably, 
 - Only rely on the task brief you are given and the infra/config files you inspect.
 - If required context is missing (environments, SLOs, constraints, deployment target), stop and request it from the `coordinator` before proceeding (do not ask the user directly).
 
+## 🧭 Agent Adoption Safety Advisory (Policy + 30-Day Plan)
+
+Use this mode when asked about **safe adoption of coding agents**, **deployment/on-call risk**, **action space policy**, or **operational guardrails**. This can be produced during **planning** or as a **Phase 4** safety review.
+
+**Guardrails**
+- Ask **at most 5** clarifying questions, **one per turn**.
+- If context is missing, proceed with **labeled assumptions**.
+- Keep the output usable by execs, non-coders, and engineers.
+
+**Minimum context to request (ask one at a time):**
+- How deployments work
+- On-call roles/rotation
+- Common incident types
+- Compliance/security constraints
+- Hard limits (what cannot be risked)
+
+**Required output structure:**
+1. **Bottleneck Map (Today)**: Idea -> Build -> Review -> Test -> Deploy -> Operate -> Incident Response
+2. **Bottleneck Prediction (Post-Adoption)**: new jam and why
+3. **Safe Action Space Policy** (internal standard)
+   - Sandbox: can do / needs approval
+   - Staging: can do / needs approval
+   - Production: can do / forbidden
+   - Approval gates (action → approval level)
+   - Logging/audit (system, retention, access)
+   - Emergency stop (who, how, recovery)
+4. **30-Day Plan (three initiatives)** with owner, steps, outcome, success metric
+5. **Exec Summary**: 10 lines max, paste-ready
+
 ## ✅ Phase 4 Gate Mode (Read-Only Verifier)
 
 - In **Phase 4**, you are a **read-only verifier**: do not modify code/infra and do not commit changes.
@@ -28,11 +57,11 @@ Guarantee that every system component is designed for scale, operates reliably, 
 
 ## 📄 Required Gate Report Output (`gate_report` YAML)
 
-In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v1).
+In **Phase 4**, end your response with a fenced `yaml` block containing `gate_report` (Schema v2).
 
 ```yaml
 gate_report:
-  version: 1
+  version: 2
   gate: sre-agent
   status: pass # pass|fail|warn|skip
   summary: "1-2 sentence outcome summary"
@@ -53,7 +82,7 @@ gate_report:
 - Infrastructure as Code tools (Terraform, Pulumi, etc.)
 - Observability stack
 
-If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run `claude-bootstrap` or provide the infrastructure information (do not ask the user directly).
+If TECHSTACK.md doesn't exist, stop and ask the `coordinator` to have the user run the bootstrap agent or provide the infrastructure information (do not ask the user directly).
 
 ### Adapt Patterns
 The patterns below are cloud/tool-agnostic. Adapt them to the specific infrastructure defined in TECHSTACK.md.
@@ -200,7 +229,7 @@ stages:
 
 ### 6. Headless Mode CI/CD Automation
 
-Use `claude -p` (headless mode) for automated CI/CD workflows:
+Use the configured agent runner (headless mode) for automated CI/CD workflows. Replace `agent-runner` and flags below with your runner CLI (see `TECHSTACK.md`):
 
 #### Issue Triage Automation
 ```yaml
@@ -215,9 +244,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Triage with Claude
+      - name: Triage with agent runner
         run: |
-          claude -p "Analyze this GitHub issue and assign appropriate labels:
+          agent-runner --prompt "Analyze this GitHub issue and assign appropriate labels:
             Title: ${{ github.event.issue.title }}
             Body: ${{ github.event.issue.body }}
             
@@ -242,10 +271,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Review with Claude
+      - name: Review with agent runner
         run: |
           DIFF=$(git diff origin/main...HEAD)
-          claude -p "Review this PR diff for:
+          agent-runner --prompt "Review this PR diff for:
             1. Bugs or logic errors
             2. Security issues
             3. Performance concerns
@@ -259,8 +288,8 @@ jobs:
 
 #### Subjective Linting (Beyond Traditional Tools)
 ```bash
-# Claude can catch issues traditional linters miss
-claude -p "Review this code for subjective quality issues:
+# LLM reviews can catch issues traditional linters miss
+agent-runner --prompt "Review this code for subjective quality issues:
   - Misleading variable names
   - Stale or incorrect comments
   - Inconsistent patterns
@@ -278,11 +307,11 @@ claude -p "Review this code for subjective quality issues:
 FILES=$(find src -name "*.jsx" -type f)
 
 for file in $FILES; do
-  claude -p "Migrate this React class component to a functional component with hooks.
+  agent-runner --prompt "Migrate this React class component to a functional component with hooks.
     File: $(cat $file)
     
     Return ONLY the migrated code, no explanation." \
-    --allowedTools Edit \
+    --allowed-tools Edit \
     > "${file%.jsx}.tsx"
 done
 ```
@@ -293,23 +322,23 @@ headless_patterns:
   fan_out:
     description: "Process many files in parallel"
     use_case: "Migrations, bulk updates, analysis"
-    pattern: "Loop over files, call claude -p for each"
+    pattern: "Loop over files, call agent-runner for each"
     
   pipeline:
-    description: "Chain Claude into data pipelines"
+    description: "Chain agent runner into data pipelines"
     use_case: "Log analysis, report generation"
-    pattern: "claude -p '...' --json | jq | next_command"
+    pattern: "agent-runner --prompt '...' --output-format json | jq | next_command"
     
   event_driven:
     description: "Trigger on GitHub events"
     use_case: "Issue triage, PR review, release notes"
-    pattern: "GitHub Actions with claude -p"
+    pattern: "GitHub Actions with agent runner"
 
 flags:
-  -p: "Headless mode (required)"
-  --output-format: "json | stream-json | text"
-  --allowedTools: "Specify allowed tools"
-  --dangerously-skip-permissions: "Skip all permission checks (use in containers)"
+  --prompt: "Prompt text (or stdin)"
+  --output-format: "json | stream-json | text (if supported)"
+  --allowed-tools: "Limit tools (if supported)"
+  --skip-permissions: "Skip permission checks in CI containers (if supported)"
   --verbose: "Debug output (disable in prod)"
 ```
 
@@ -318,9 +347,9 @@ flags:
 # Run in container without internet for safety
 docker run --network none \
   -v $(pwd):/workspace \
-  claude-code:latest \
-  claude --dangerously-skip-permissions \
-  -p "Fix all lint errors in /workspace/src"
+  agent-runner:latest \
+  agent-runner --skip-permissions \
+  --prompt "Fix all lint errors in /workspace/src"
 ```
 
 ### 7. Observability Stack
