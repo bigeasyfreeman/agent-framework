@@ -1,0 +1,61 @@
+# Security Patterns
+# Reference for destructive/sensitive commands
+# Extracted from PAI - use judgment, not blindly
+---
+version: "1.0"
+
+bash:
+  # NEVER run - catastrophic
+  blocked:
+    - pattern: "rm -rf /"
+    - pattern: "rm -rf ~"
+    - pattern: "diskutil eraseDisk"
+    - pattern: "diskutil zeroDisk"
+    - pattern: "dd if=/dev/zero"
+    - pattern: "gh repo delete"
+    - pattern: "gh repo edit --visibility public"
+
+  # Ask first - dangerous but legitimate
+  confirm:
+    - pattern: "git push --force"
+    - pattern: "git push -f"
+    - pattern: "git reset --hard"
+    - pattern: "aws s3 rm.*--recursive"
+    - pattern: "aws ec2 terminate"
+    - pattern: "terraform destroy"
+    - pattern: "docker system prune"
+    - pattern: "kubectl delete namespace"
+    - pattern: "DROP DATABASE"
+    - pattern: "DROP TABLE"
+    - pattern: "TRUNCATE"
+
+  # Log but allow
+  alert:
+    - pattern: "curl.*\\|.*sh"
+    - pattern: "curl.*\\|.*bash"
+
+paths:
+  # Never touch
+  zeroAccess:
+    - "~/.ssh/id_*"
+    - "~/.ssh/*.pem"
+    - "~/.aws/credentials"
+    - "~/.gnupg/private*"
+    - "**/credentials.json"
+    - "**/service-account*.json"
+
+  # Read only
+  readOnly:
+    - "/etc/**"
+
+  # Ask before writing
+  confirmWrite:
+    - "**/.env"
+    - "**/.env.*"
+    - "~/.ssh/*"
+
+  # Never delete
+  noDelete:
+    - ".git/**"
+    - "LICENSE*"
+    - "README.md"
